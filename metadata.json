@@ -1,0 +1,8 @@
+{
+  "name": "Orbit",
+  "description": "A collaborative platform inspired by Jitsi, featuring real-time AI voice interactions powered by Gemini 2.5 Flash Native Audio.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
