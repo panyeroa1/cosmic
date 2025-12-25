@@ -8,7 +8,7 @@ Orbit is a real-time collaboration platform that merges high-quality video confe
 - [x] **Secure Authentication**: Enhanced with password toggles and matching validation.
 - [x] **Lobby / Room Settings**: A pre-join experience with hardware detection, video refinement, and global language support.
 - [x] **Live AI Voice Assistant**: Gemini 2.5 Flash Native Audio for meeting tasks.
-- [x] **Functional Meeting Interface**: Sanitized Jitsi IFrame integration.
+- [x] **Stealth Meeting Interface**: Deeply sanitized Jitsi IFrame integration with zero third-party branding.
 - [x] **Data Persistence**: Supabase-powered transcription storage.
 
 ## Visual Identity
@@ -19,5 +19,6 @@ Orbit is a real-time collaboration platform that merges high-quality video confe
 ## To-Do List
 1. [x] Pre-join Settings Page implementation.
 2. [x] Auth security enhancements (Password toggles & confirmation).
-3. [ ] Implement transcription history viewer tab in Sidebar.
-4. [ ] Add "Action Item" detection to Gemini Assistant.
+3. [x] **Hardened Jitsi Sanitization**: (Embedding warnings removed).
+4. [ ] Implement transcription history viewer tab in Sidebar.
+5. [ ] Add "Action Item" detection to Gemini Assistant.
