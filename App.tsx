@@ -4,9 +4,10 @@ import { MeetingView } from './components/MeetingView';
 import { OrbitAssistant } from './components/OrbitAssistant';
 import { Auth } from './components/Auth';
 import { RoomSettings } from './components/RoomSettings';
+import { TranscriptionHistory } from './components/TranscriptionHistory';
 import { supabase } from './lib/supabase';
 import { Session } from '@supabase/supabase-js';
-import { Settings, Users, Shield, Calendar, Search, Check, Copy, LogOut } from 'lucide-react';
+import { Settings, Users, Shield, Calendar, Search, Check, Copy, LogOut, FileText } from 'lucide-react';
 
 const ORBIT_LOGO_URL = 'https://eburon.ai/orbit/1.png';
 
@@ -49,14 +50,15 @@ export const OrbitLogo: React.FC<{ height?: number | string, className?: string 
 
 const Sidebar: React.FC<{ activeTab: string, setActiveTab: (t: string) => void, onLogout: () => void }> = ({ activeTab, setActiveTab, onLogout }) => {
   const tabs = [
-    { id: 'calendar', icon: Calendar },
-    { id: 'users', icon: Users },
-    { id: 'security', icon: Shield },
-    { id: 'search', icon: Search },
+    { id: 'meeting', icon: Calendar, label: 'Session' },
+    { id: 'history', icon: FileText, label: 'Vault' },
+    { id: 'users', icon: Users, label: 'Team' },
+    { id: 'security', icon: Shield, label: 'Safe' },
+    { id: 'search', icon: Search, label: 'Explore' },
   ];
 
   return (
-    <div className="w-20 bg-[#050505]/60 backdrop-blur-md border-r border-white/5 flex flex-col items-center py-8 gap-10">
+    <div className="w-20 bg-[#050505]/60 backdrop-blur-md border-r border-white/5 flex flex-col items-center py-8 gap-10 z-50">
       <div className="group cursor-pointer">
         <div className="transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3">
           <OrbitLogo height={40} />
@@ -66,10 +68,14 @@ const Sidebar: React.FC<{ activeTab: string, setActiveTab: (t: string) => void, 
         {tabs.map(tab => (
           <button 
             key={tab.id}
+            title={tab.label}
             onClick={() => setActiveTab(tab.id)}
-            className={`transition-all p-3 rounded-2xl ${activeTab === tab.id ? 'text-white bg-white/10 shadow-[0_0_20px_rgba(255,255,255,0.1)]' : 'text-gray-600 hover:text-white hover:bg-white/5'}`}
+            className={`transition-all p-3 rounded-2xl relative group ${activeTab === tab.id ? 'text-white bg-white/10 shadow-[0_0_20px_rgba(255,255,255,0.1)]' : 'text-zinc-600 hover:text-white hover:bg-white/5'}`}
           >
             <tab.icon size={22}/>
+            {activeTab === tab.id && (
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white rounded-r-full" />
+            )}
           </button>
         ))}
       </div>
@@ -77,11 +83,11 @@ const Sidebar: React.FC<{ activeTab: string, setActiveTab: (t: string) => void, 
         <button 
           onClick={onLogout}
           title="Exit Session"
-          className="text-gray-600 hover:text-red-500 transition-colors p-3 rounded-xl hover:bg-red-500/5"
+          className="text-zinc-600 hover:text-red-500 transition-colors p-3 rounded-xl hover:bg-red-500/5"
         >
           <LogOut size={22}/>
         </button>
-        <button className="text-gray-600 hover:text-white transition-colors p-3 rounded-xl hover:bg-white/5">
+        <button className="text-zinc-600 hover:text-white transition-colors p-3 rounded-xl hover:bg-white/5">
           <Settings size={22}/>
         </button>
       </div>
@@ -109,7 +115,7 @@ const Header: React.FC<{ roomName: string, session: Session }> = ({ roomName, se
            <OrbitLogo height={32} />
         </div>
         <div className="h-5 w-px bg-white/10 mx-2" />
-        <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full border border-white/5">
+        <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full border border-white/5">
           {roomName.replace(/-/g, ' ')}
         </span>
       </div>
@@ -141,7 +147,7 @@ const Header: React.FC<{ roomName: string, session: Session }> = ({ roomName, se
 type AppStep = 'auth' | 'settings' | 'meeting';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('calendar');
+  const [activeTab, setActiveTab] = useState('meeting');
   const [session, setSession] = useState<Session | null>(null);
   const [isGuest, setIsGuest] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -239,8 +245,21 @@ export default function App() {
               <div className="flex-1 flex flex-col">
                 <Header roomName={roomName} session={effectiveSession} />
                 <main className="flex-1 flex overflow-hidden bg-black/40 backdrop-blur-sm">
-                  <MeetingView roomName={roomName} />
-                  <OrbitAssistant roomName={roomName} userId={effectiveSession.user.id} />
+                  {activeTab === 'meeting' ? (
+                    <>
+                      <MeetingView roomName={roomName} />
+                      <OrbitAssistant roomName={roomName} userId={effectiveSession.user.id} />
+                    </>
+                  ) : activeTab === 'history' ? (
+                    <TranscriptionHistory 
+                      userId={effectiveSession.user.id} 
+                      onClose={() => setActiveTab('meeting')} 
+                    />
+                  ) : (
+                    <div className="flex-1 flex items-center justify-center text-zinc-700 font-bold uppercase tracking-[0.5em] text-xs">
+                      Module Offline
+                    </div>
+                  )}
                 </main>
               </div>
             </>

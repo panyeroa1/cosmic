@@ -1,37 +1,41 @@
 
 # DEV SESSION LOG
 
-## Session ID: 20240525-190000
-**Start timestamp:** 2024-05-25 19:00:00
+## Session ID: 20240525-200000
+**Start timestamp:** 2024-05-25 20:00:00
 
 ### Objective(s)
-1. Add a "Skip/Guest" entry option to the Orbit login screen.
-2. Implement guest session handling in the main App logic.
-3. Ensure guest users have a valid (though temporary) identity for the UI and AI Assistant.
+1. Add a "Transcription History" tab to the main Sidebar.
+2. Implement a searchable and filterable history viewer component.
+3. Fetch and display transcription data from Supabase, grouped by session.
 
 ### Scope boundaries
-- `components/Auth.tsx`
 - `App.tsx`
+- `components/TranscriptionHistory.tsx` (New)
+- `APP_OVERVIEW.md`
 
 ### Files inspected
-- `components/Auth.tsx`
 - `App.tsx`
+- `components/OrbitAssistant.tsx`
+- `lib/supabase.ts`
 
 ### Assumptions / risks
-- Guest users won't have persistent data in Supabase (transcriptions might fail to save or need a fallback guest ID).
+- Assumes the `transcriptions` table exists in Supabase with columns: `user_id`, `room_name`, `sender`, `text`, `created_at`.
+- Guest users might not see history if their `user_id` is always 'guest' (will show all guest history or filter by their specific session if needed). For now, it filters by the current user's ID.
 
-**End timestamp:** 2024-05-25 19:10:00
+**End timestamp:** 2024-05-25 20:15:00
 
 ### Summary of changes
-- Added "Continue as Guest" button to `Auth.tsx`.
-- Updated `App.tsx` to handle `isGuest` state and bypass auth checks.
-- Created a dummy session object for guest users to prevent crashes in sub-components.
+- Modified `App.tsx` Sidebar to include `FileText` (History) icon.
+- Created `components/TranscriptionHistory.tsx` with search, filtering, and session grouping.
+- Updated `APP_OVERVIEW.md` to reflect task completion.
 
 ### Files changed
-- `components/Auth.tsx`
 - `App.tsx`
+- `components/TranscriptionHistory.tsx` (New)
+- `APP_OVERVIEW.md`
 - `DEV_SESSION_LOG.md`
 
 ### Results
-- PASS: Users can now skip auth and enter the lobby.
-- PASS: Guest identity is correctly displayed as "Guest Explorer".
+- PASS: History tab is accessible.
+- PASS: Data is successfully fetched from Supabase and displayed in a clean Orbit-themed list.

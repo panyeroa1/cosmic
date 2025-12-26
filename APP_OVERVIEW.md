@@ -10,6 +10,7 @@ Orbit is a real-time collaboration platform that merges high-quality video confe
 - [x] **Live AI Voice Assistant**: Gemini 2.5 Flash Native Audio for meeting tasks.
 - [x] **Stealth Meeting Interface**: Deeply sanitized Jitsi IFrame integration with zero third-party branding.
 - [x] **Data Persistence**: Supabase-powered transcription storage.
+- [x] **Transcription History**: Searchable and filterable archive of past meeting interactions.
 
 ## Visual Identity
 - **Logo**: Official Orbit asset (`1.png`).
@@ -20,5 +21,5 @@ Orbit is a real-time collaboration platform that merges high-quality video confe
 1. [x] Pre-join Settings Page implementation.
 2. [x] Auth security enhancements (Password toggles & confirmation).
 3. [x] **Hardened Jitsi Sanitization**: (Embedding warnings removed).
-4. [ ] Implement transcription history viewer tab in Sidebar.
+4. [x] Implement transcription history viewer tab in Sidebar.
 5. [ ] Add "Action Item" detection to Gemini Assistant.
