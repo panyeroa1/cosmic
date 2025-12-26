@@ -47,15 +47,13 @@ export const OrbitLogo: React.FC<{ height?: number | string, className?: string 
   </div>
 );
 
-const Sidebar: React.FC<{ activeTab: string, setActiveTab: (t: string) => void }> = ({ activeTab, setActiveTab }) => {
+const Sidebar: React.FC<{ activeTab: string, setActiveTab: (t: string) => void, onLogout: () => void }> = ({ activeTab, setActiveTab, onLogout }) => {
   const tabs = [
     { id: 'calendar', icon: Calendar },
     { id: 'users', icon: Users },
     { id: 'security', icon: Shield },
     { id: 'search', icon: Search },
   ];
-
-  const handleLogout = () => supabase.auth.signOut();
 
   return (
     <div className="w-20 bg-[#050505]/60 backdrop-blur-md border-r border-white/5 flex flex-col items-center py-8 gap-10">
@@ -77,8 +75,8 @@ const Sidebar: React.FC<{ activeTab: string, setActiveTab: (t: string) => void }
       </div>
       <div className="flex flex-col gap-6">
         <button 
-          onClick={handleLogout}
-          title="Log Out"
+          onClick={onLogout}
+          title="Exit Session"
           className="text-gray-600 hover:text-red-500 transition-colors p-3 rounded-xl hover:bg-red-500/5"
         >
           <LogOut size={22}/>
@@ -93,9 +91,12 @@ const Sidebar: React.FC<{ activeTab: string, setActiveTab: (t: string) => void }
 
 const Header: React.FC<{ roomName: string, session: Session }> = ({ roomName, session }) => {
   const [copied, setCopied] = useState(false);
+  const isGuest = session.user.id === 'guest';
+  const displayName = isGuest ? 'Guest Explorer' : session.user.email?.split('@')[0];
+  const emailPlaceholder = isGuest ? 'No Account' : session.user.email;
 
   const copyRoomLink = () => {
-    const link = `https://meet.jit.si/Orbit-${roomName}`;
+    const link = `${window.location.origin}?room=${roomName}`;
     navigator.clipboard.writeText(link);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -115,14 +116,14 @@ const Header: React.FC<{ roomName: string, session: Session }> = ({ roomName, se
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-3">
           <div className="flex -space-x-3">
-            <div title={session.user.email} className="w-9 h-9 rounded-full border-2 border-[#080808] bg-zinc-700 flex items-center justify-center text-xs font-bold cursor-help uppercase shadow-lg shadow-black/40">
-              {session.user.email?.substring(0, 2)}
+            <div title={emailPlaceholder} className={`w-9 h-9 rounded-full border-2 border-[#080808] flex items-center justify-center text-xs font-bold cursor-help uppercase shadow-lg shadow-black/40 ${isGuest ? 'bg-zinc-800' : 'bg-zinc-700'}`}>
+              {isGuest ? 'G' : session.user.email?.substring(0, 2)}
             </div>
             <div title="Orbit AI Assistant" className="w-9 h-9 rounded-full border-2 border-[#080808] bg-gradient-to-br from-zinc-100 to-zinc-400 flex items-center justify-center text-[10px] font-bold text-black cursor-help shadow-lg shadow-white/10">AI</div>
           </div>
           <div className="hidden sm:block text-right">
-            <div className="text-xs font-semibold text-white">{session.user.email?.split('@')[0]}</div>
-            <div className="text-[10px] text-zinc-400 font-medium uppercase tracking-tighter">Professional Plan</div>
+            <div className="text-xs font-semibold text-white">{displayName}</div>
+            <div className="text-[10px] text-zinc-400 font-medium uppercase tracking-tighter">{isGuest ? 'Guest Access' : 'Professional Plan'}</div>
           </div>
         </div>
         <button 
@@ -142,6 +143,7 @@ type AppStep = 'auth' | 'settings' | 'meeting';
 export default function App() {
   const [activeTab, setActiveTab] = useState('calendar');
   const [session, setSession] = useState<Session | null>(null);
+  const [isGuest, setIsGuest] = useState(false);
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState<AppStep>('auth');
   const [roomName] = useState(() => {
@@ -155,7 +157,10 @@ export default function App() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session) setStep('settings');
+      if (session) {
+        setStep('settings');
+        setIsGuest(false);
+      }
       setLoading(false);
     });
 
@@ -163,12 +168,49 @@ export default function App() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      if (session) setStep('settings');
-      else setStep('auth');
+      if (session) {
+        setStep('settings');
+        setIsGuest(false);
+      } else if (!isGuest) {
+        setStep('auth');
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [isGuest]);
+
+  const handleGuestAccess = () => {
+    setIsGuest(true);
+    setStep('settings');
+  };
+
+  const handleLogout = () => {
+    if (isGuest) {
+      setIsGuest(false);
+      setStep('auth');
+    } else {
+      supabase.auth.signOut();
+    }
+  };
+
+  // Construct a dummy session for guest users to satisfy child component requirements
+  const effectiveSession = useMemo(() => {
+    if (session) return session;
+    if (isGuest) {
+      return {
+        user: {
+          id: 'guest',
+          email: 'guest@orbit.internal',
+          user_metadata: { full_name: 'Guest Explorer' }
+        },
+        access_token: '',
+        refresh_token: '',
+        expires_in: 0,
+        token_type: 'bearer'
+      } as unknown as Session;
+    }
+    return null;
+  }, [session, isGuest]);
 
   if (loading) {
     return (
@@ -185,20 +227,24 @@ export default function App() {
     <div className="relative h-screen w-screen overflow-hidden text-[#f8fafc] selection:bg-white/20">
       <GalaxyBackground />
       
-      {step === 'auth' || !session ? (
-        <Auth />
+      {step === 'auth' && !session && !isGuest ? (
+        <Auth onGuestAccess={handleGuestAccess} />
       ) : step === 'settings' ? (
         <RoomSettings roomName={roomName} onJoin={() => setStep('meeting')} />
       ) : (
         <div className="flex h-full w-full">
-          <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-          <div className="flex-1 flex flex-col">
-            <Header roomName={roomName} session={session} />
-            <main className="flex-1 flex overflow-hidden bg-black/40 backdrop-blur-sm">
-              <MeetingView roomName={roomName} />
-              <OrbitAssistant roomName={roomName} userId={session.user.id} />
-            </main>
-          </div>
+          {effectiveSession && (
+            <>
+              <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={handleLogout} />
+              <div className="flex-1 flex flex-col">
+                <Header roomName={roomName} session={effectiveSession} />
+                <main className="flex-1 flex overflow-hidden bg-black/40 backdrop-blur-sm">
+                  <MeetingView roomName={roomName} />
+                  <OrbitAssistant roomName={roomName} userId={effectiveSession.user.id} />
+                </main>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

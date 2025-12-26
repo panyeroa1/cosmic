@@ -1,11 +1,15 @@
 
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Mail, Lock, Loader2, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, Loader2, ArrowRight, Eye, EyeOff, UserCircle } from 'lucide-react';
 
 const ORBIT_LOGO_URL = 'https://eburon.ai/orbit/1.png';
 
-export const Auth: React.FC = () => {
+interface AuthProps {
+  onGuestAccess?: () => void;
+}
+
+export const Auth: React.FC<AuthProps> = ({ onGuestAccess }) => {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -140,7 +144,7 @@ export const Auth: React.FC = () => {
           </button>
         </form>
 
-        <div className="text-center mt-6">
+        <div className="flex flex-col gap-4 mt-6">
           <button
             onClick={() => {
               setIsSignUp(!isSignUp);
@@ -149,6 +153,16 @@ export const Auth: React.FC = () => {
             className="text-xs font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest"
           >
             {isSignUp ? 'Already an explorer? Sign in' : "New to orbit? Join the mission"}
+          </button>
+
+          <div className="h-px bg-white/5 w-full my-2" />
+
+          <button
+            onClick={onGuestAccess}
+            className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-[#121212]/50 border border-white/5 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm font-bold group"
+          >
+            <UserCircle size={18} className="group-hover:scale-110 transition-transform" />
+            Continue as Guest
           </button>
         </div>
       </div>

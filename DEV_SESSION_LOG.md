@@ -1,38 +1,37 @@
 
 # DEV SESSION LOG
 
-## Session ID: 20240525-180000
-**Start timestamp:** 2024-05-25 18:00:00
+## Session ID: 20240525-190000
+**Start timestamp:** 2024-05-25 19:00:00
 
 ### Objective(s)
-1. Completely remove the "Jitsi embedding" warning and any remaining Jitsi-branded toast notifications.
-2. Implement a custom "Syncing" overlay to hide the IFrame initialization phase.
-3. Harden the white-label configuration to prevent Jitsi from announcing its presence.
+1. Add a "Skip/Guest" entry option to the Orbit login screen.
+2. Implement guest session handling in the main App logic.
+3. Ensure guest users have a valid (though temporary) identity for the UI and AI Assistant.
 
 ### Scope boundaries
-- `components/MeetingView.tsx`
-- `APP_OVERVIEW.md`
+- `components/Auth.tsx`
+- `App.tsx`
 
 ### Files inspected
-- `components/MeetingView.tsx`
+- `components/Auth.tsx`
+- `App.tsx`
 
 ### Assumptions / risks
-- The "embedding warning" is a platform-level toast from `meet.jit.si`. Aggressive notification disabling should suppress it.
+- Guest users won't have persistent data in Supabase (transcriptions might fail to save or need a fallback guest ID).
 
-**End timestamp:** 2024-05-25 18:15:00
+**End timestamp:** 2024-05-25 19:10:00
 
 ### Summary of changes
-- Added a `isReady` state to `MeetingView.tsx` to control the visibility of the IFrame.
-- Implemented a high-fidelity "Orbit Syncing" overlay with the official logo.
-- Added `disableThirdPartyRequests`, `enableInsecureRoomNameWarning`, and `enableWelcomePage: false`.
-- Expanded `disabledNotifications` to cover all known Jitsi system messages.
-- Forced `prejoinConfig: { enabled: false }` and `pwa: { enabled: false }`.
+- Added "Continue as Guest" button to `Auth.tsx`.
+- Updated `App.tsx` to handle `isGuest` state and bypass auth checks.
+- Created a dummy session object for guest users to prevent crashes in sub-components.
 
 ### Files changed
-- `components/MeetingView.tsx`
+- `components/Auth.tsx`
+- `App.tsx`
 - `DEV_SESSION_LOG.md`
-- `APP_OVERVIEW.md`
 
 ### Results
-- PASS: Jitsi initialization is hidden behind Orbit branding.
-- PASS: System-level "embedding" warnings are suppressed via configuration.
+- PASS: Users can now skip auth and enter the lobby.
+- PASS: Guest identity is correctly displayed as "Guest Explorer".
