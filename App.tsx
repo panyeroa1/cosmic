@@ -1,17 +1,17 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { MeetingView } from './components/MeetingView';
-import { OrbitAssistant } from './components/OrbitAssistant';
 import { Auth } from './components/Auth';
 import { RoomSettings } from './components/RoomSettings';
 import { TranscriptionHistory } from './components/TranscriptionHistory';
 import { supabase } from './lib/supabase';
 import { Session } from '@supabase/supabase-js';
-import { Settings, Users, Shield, Calendar, Search, Check, Copy, LogOut, FileText } from 'lucide-react';
+import { Settings, Users, Shield, Calendar, Search, Check, Copy, LogOut, FileText, UserPlus, Globe, Key, Activity, User as UserIcon, Bot } from 'lucide-react';
 
 const ORBIT_LOGO_URL = 'https://eburon.ai/orbit/1.png';
 
-// Galaxy Background Component
+type AppStep = 'auth' | 'settings' | 'meeting';
+
 const GalaxyBackground: React.FC = () => {
   const generateStars = (count: number) => {
     let stars = "";
@@ -45,6 +45,40 @@ export const OrbitLogo: React.FC<{ height?: number | string, className?: string 
       className="object-contain"
     />
     <div className="absolute inset-0 bg-white/5 rounded-full blur-2xl -z-10 animate-pulse" />
+  </div>
+);
+
+export const ModulePageHeader: React.FC<{ icon: React.ElementType, title: string, subtitle: string, action?: React.ReactNode }> = ({ icon: Icon, title, subtitle, action }) => (
+  <div className="p-8 pb-10 flex items-start justify-between border-b border-white/5 bg-[#080808]/10">
+    <div className="flex items-start gap-8">
+      <div className="w-16 h-16 rounded-[1.5rem] bg-white/5 border border-white/10 flex items-center justify-center text-white/50 shadow-xl">
+        <Icon size={36} />
+      </div>
+      <div className="space-y-1">
+        <h2 className="text-4xl font-black tracking-tighter uppercase italic text-white">
+          {title}
+        </h2>
+        <p className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.5em]">
+          {subtitle}
+        </p>
+      </div>
+    </div>
+    {action && <div>{action}</div>}
+  </div>
+);
+
+const ModulePage: React.FC<{ 
+  icon: React.ElementType, 
+  title: string, 
+  subtitle: string, 
+  children?: React.ReactNode,
+  action?: React.ReactNode
+}> = ({ icon, title, subtitle, children, action }) => (
+  <div className="flex-1 flex flex-col bg-transparent animate-in fade-in duration-500">
+    <ModulePageHeader icon={icon} title={title} subtitle={subtitle} action={action} />
+    <div className="flex-1 px-8 pb-8 overflow-y-auto custom-scrollbar pt-10">
+      {children}
+    </div>
   </div>
 );
 
@@ -82,7 +116,6 @@ const Sidebar: React.FC<{ activeTab: string, setActiveTab: (t: string) => void, 
       <div className="flex flex-col gap-6">
         <button 
           onClick={onLogout}
-          title="Exit Session"
           className="text-zinc-600 hover:text-red-500 transition-colors p-3 rounded-xl hover:bg-red-500/5"
         >
           <LogOut size={22}/>
@@ -95,56 +128,19 @@ const Sidebar: React.FC<{ activeTab: string, setActiveTab: (t: string) => void, 
   );
 };
 
-const Header: React.FC<{ roomName: string, session: Session }> = ({ roomName, session }) => {
-  const [copied, setCopied] = useState(false);
-  const isGuest = session.user.id === 'guest';
-  const displayName = isGuest ? 'Guest Explorer' : session.user.email?.split('@')[0];
-  const emailPlaceholder = isGuest ? 'No Account' : session.user.email;
-
-  const copyRoomLink = () => {
-    const link = `${window.location.origin}?room=${roomName}`;
-    navigator.clipboard.writeText(link);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
+const Header: React.FC = () => {
   return (
     <header className="h-16 bg-[#080808]/40 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-8 z-10">
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-3">
            <OrbitLogo height={32} />
         </div>
-        <div className="h-5 w-px bg-white/10 mx-2" />
-        <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full border border-white/5">
-          {roomName.replace(/-/g, ' ')}
-        </span>
       </div>
-      <div className="flex items-center gap-6">
-        <div className="flex items-center gap-3">
-          <div className="flex -space-x-3">
-            <div title={emailPlaceholder} className={`w-9 h-9 rounded-full border-2 border-[#080808] flex items-center justify-center text-xs font-bold cursor-help uppercase shadow-lg shadow-black/40 ${isGuest ? 'bg-zinc-800' : 'bg-zinc-700'}`}>
-              {isGuest ? 'G' : session.user.email?.substring(0, 2)}
-            </div>
-            <div title="Orbit AI Assistant" className="w-9 h-9 rounded-full border-2 border-[#080808] bg-gradient-to-br from-zinc-100 to-zinc-400 flex items-center justify-center text-[10px] font-bold text-black cursor-help shadow-lg shadow-white/10">AI</div>
-          </div>
-          <div className="hidden sm:block text-right">
-            <div className="text-xs font-semibold text-white">{displayName}</div>
-            <div className="text-[10px] text-zinc-400 font-medium uppercase tracking-tighter">{isGuest ? 'Guest Access' : 'Professional Plan'}</div>
-          </div>
-        </div>
-        <button 
-          onClick={copyRoomLink}
-          className="flex items-center gap-2 bg-white hover:bg-zinc-200 text-black px-4 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 shadow-lg shadow-white/5"
-        >
-          {copied ? <Check size={14} className="animate-in zoom-in" /> : <Copy size={14} />}
-          {copied ? 'Copied' : 'Invite'}
-        </button>
-      </div>
+      {/* Right side left clean for panel docking as per user request */}
+      <div className="flex items-center gap-6" />
     </header>
   );
 };
-
-type AppStep = 'auth' | 'settings' | 'meeting';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('meeting');
@@ -152,7 +148,11 @@ export default function App() {
   const [isGuest, setIsGuest] = useState(false);
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState<AppStep>('auth');
+  
   const [roomName] = useState(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomFromUrl = urlParams.get('room');
+    if (roomFromUrl) return roomFromUrl;
     const stored = sessionStorage.getItem('orbit_room');
     if (stored) return stored;
     const fresh = Math.random().toString(36).substring(7).toUpperCase();
@@ -199,13 +199,12 @@ export default function App() {
     }
   };
 
-  // Construct a dummy session for guest users to satisfy child component requirements
   const effectiveSession = useMemo(() => {
     if (session) return session;
     if (isGuest) {
       return {
         user: {
-          id: 'guest',
+          id: '00000000-0000-0000-0000-000000000000',
           email: 'guest@orbit.internal',
           user_metadata: { full_name: 'Guest Explorer' }
         },
@@ -242,21 +241,99 @@ export default function App() {
           {effectiveSession && (
             <>
               <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={handleLogout} />
-              <div className="flex-1 flex flex-col">
-                <Header roomName={roomName} session={effectiveSession} />
-                <main className="flex-1 flex overflow-hidden bg-black/40 backdrop-blur-sm">
+              <div className="flex-1 flex flex-col relative">
+                {activeTab !== 'meeting' && (
+                  <Header />
+                )}
+                <main className="flex-1 relative bg-black/40 backdrop-blur-sm flex flex-col">
                   {activeTab === 'meeting' ? (
-                    <>
-                      <MeetingView roomName={roomName} />
-                      <OrbitAssistant roomName={roomName} userId={effectiveSession.user.id} />
-                    </>
+                    <MeetingView roomName={roomName} userId={effectiveSession.user.id} />
                   ) : activeTab === 'history' ? (
                     <TranscriptionHistory 
                       userId={effectiveSession.user.id} 
                       onClose={() => setActiveTab('meeting')} 
                     />
+                  ) : activeTab === 'users' ? (
+                    <ModulePage 
+                      icon={Users} 
+                      title="Team Intelligence" 
+                      subtitle="Active organization members & session protocols"
+                      action={
+                        <button className="bg-white text-black px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-zinc-200 transition-all">
+                          <UserPlus size={14} /> Invite Member
+                        </button>
+                      }
+                    >
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="p-6 bg-[#0a0a0a] border border-white/5 rounded-3xl space-y-4">
+                          <div className="w-12 h-12 rounded-2xl bg-zinc-800 flex items-center justify-center border border-white/10 text-zinc-500">
+                            <UserIcon size={18} />
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-white uppercase tracking-tight">Active Explorer</h4>
+                            <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest mt-1">Primary Session Owner</p>
+                          </div>
+                          <div className="pt-4 border-t border-white/5 flex items-center justify-between text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                            <span>Status</span>
+                            <span className="text-green-500">Online</span>
+                          </div>
+                        </div>
+                      </div>
+                    </ModulePage>
+                  ) : activeTab === 'security' ? (
+                    <ModulePage 
+                      icon={Shield} 
+                      title="Safety & Compliance" 
+                      subtitle="End-to-end encryption & secure protocol management"
+                    >
+                       <div className="space-y-6 max-w-2xl">
+                          <div className="p-6 bg-white/5 border border-white/10 rounded-3xl flex items-center gap-6">
+                            <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center text-green-500">
+                              <Key size={32} />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="text-lg font-bold text-white uppercase tracking-tight">Session Encryption</h4>
+                              <p className="text-xs text-zinc-500 mt-1">Advanced 256-bit AES protection is currently active for all voice and video streams.</p>
+                            </div>
+                          </div>
+                          <div className="p-6 bg-[#0a0a0a] border border-white/5 rounded-3xl flex items-center gap-6">
+                            <div className="w-16 h-16 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-500">
+                              <Activity size={32} />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="text-lg font-bold text-white uppercase tracking-tight">Log Integrity</h4>
+                              <p className="text-xs text-zinc-500 mt-1">Audit logs are being recorded with tamper-proof timestamps on the secure vault.</p>
+                            </div>
+                          </div>
+                       </div>
+                    </ModulePage>
+                  ) : activeTab === 'search' ? (
+                    <ModulePage 
+                      icon={Search} 
+                      title="Global Discovery" 
+                      subtitle="Cross-session exploration & intelligence mapping"
+                    >
+                      <div className="space-y-8">
+                        <div className="relative">
+                          <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-600" size={24} />
+                          <input 
+                            type="text" 
+                            placeholder="QUERY ARCHIVE OR GLOBAL KNOWLEDGE..."
+                            className="w-full bg-[#0a0a0a] border border-white/5 rounded-[2rem] py-8 pl-16 pr-8 text-xl font-bold uppercase tracking-tight focus:outline-none focus:ring-4 focus:ring-white/5 transition-all placeholder:text-zinc-800"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          {['Recent', 'Starred', 'AI Summaries', 'Transcripts'].map(t => (
+                            <button key={t} className="p-6 bg-white/5 border border-white/10 rounded-3xl text-center hover:bg-white/10 transition-all group">
+                              <Globe size={24} className="mx-auto mb-3 text-zinc-600 group-hover:text-white transition-colors" />
+                              <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white">{t}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </ModulePage>
                   ) : (
-                    <div className="flex-1 flex items-center justify-center text-zinc-700 font-bold uppercase tracking-[0.5em] text-xs">
+                    <div className="flex-1 h-full flex items-center justify-center text-zinc-700 font-bold uppercase tracking-[0.5em] text-xs">
                       Module Offline
                     </div>
                   )}

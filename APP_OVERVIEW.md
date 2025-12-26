@@ -11,6 +11,8 @@ Orbit is a real-time collaboration platform that merges high-quality video confe
 - [x] **Stealth Meeting Interface**: Deeply sanitized Jitsi IFrame integration with zero third-party branding.
 - [x] **Data Persistence**: Supabase-powered transcription storage.
 - [x] **Transcription History**: Searchable and filterable archive of past meeting interactions.
+- [x] **Real-time Participant List**: Dynamic sidebar showing active users in the call.
+- [x] **Enhanced Controls**: Real-time status for Audio, Video, and Screen Sharing.
 
 ## Visual Identity
 - **Logo**: Official Orbit asset (`1.png`).
